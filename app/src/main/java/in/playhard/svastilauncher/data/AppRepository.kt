@@ -45,9 +45,6 @@ class AppRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Reads the database and converts flat entities into UI-ready items with icons.
-     */
     fun getHomeItemsFlow(): Flow<List<HomeItem>> {
         return homeItemDao.getAllHomeItems().map { entities ->
             entities.mapNotNull { entity ->
@@ -72,17 +69,23 @@ class AppRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Inserts a new shortcut into the database.
-     */
     suspend fun addAppToHome(packageName: String, x: Int, y: Int) {
         withContext(Dispatchers.IO) {
-            val entity = HomeItemEntity(
-                x = x,
-                y = y,
-                packageName = packageName
-            )
+            val entity = HomeItemEntity(x = x, y = y, packageName = packageName)
             homeItemDao.insertItem(entity)
+        }
+    }
+
+    suspend fun updateAppPosition(packageName: String, newX: Int, newY: Int) {
+        withContext(Dispatchers.IO) {
+            homeItemDao.updateItemPosition(packageName, newX, newY)
+        }
+    }
+
+    suspend fun removeAppFromHome(packageName: String, x: Int, y: Int) {
+        withContext(Dispatchers.IO) {
+            // No need to create a dummy entity anymore, just pass the values directly!
+            homeItemDao.deleteItemByPosition(packageName, x, y)
         }
     }
 }

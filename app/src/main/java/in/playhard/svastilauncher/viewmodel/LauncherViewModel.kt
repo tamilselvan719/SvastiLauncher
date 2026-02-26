@@ -90,4 +90,24 @@ class LauncherViewModel(private val repository: AppRepository) : ViewModel() {
     fun removeHomeItem(item: HomeItem) {
         _homeItems.value -= item
     }
+
+    fun moveItem(item: HomeItem.AppShortcut, newX: Int, newY: Int) {
+        val currentItems = homeItems.value
+
+        // Check if another app is already sitting in the target cell
+        val isOccupied = currentItems.filterIsInstance<HomeItem.AppShortcut>()
+            .any { it.x == newX && it.y == newY && it.app.packageName != item.app.packageName }
+
+        if (!isOccupied) {
+            viewModelScope.launch {
+                repository.updateAppPosition(item.app.packageName, newX, newY)
+            }
+        }
+    }
+
+    fun removeApp(item: HomeItem.AppShortcut) {
+        viewModelScope.launch {
+            repository.removeAppFromHome(item.app.packageName, item.x, item.y)
+        }
+    }
 }

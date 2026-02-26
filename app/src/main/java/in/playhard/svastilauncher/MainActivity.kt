@@ -62,7 +62,14 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 HomeScreen(
                                     items = homeItems,
-                                    onItemClick = { item -> viewModel.onAppClicked(item.app) }
+                                    onItemClick = { item -> viewModel.onAppClicked(item.app) },
+                                    onItemMoved = { item, newX, newY ->
+                                        // This is the ONLY place the ViewModel should be called
+                                        viewModel.moveItem(item, newX, newY)
+                                    },
+                                    onItemRemoved = { item ->
+                                        viewModel.removeApp(item)
+                                    }
                                 )
                             }
                         }
