@@ -11,12 +11,16 @@ import `in`.playhard.svastilauncher.data.AppRepository
 import `in`.playhard.svastilauncher.model.AppInfo
 import `in`.playhard.svastilauncher.model.HomeItem
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 enum class LauncherScreen {
     HOME,
     DRAWER
 }
 
-class LauncherViewModel(private val repository: AppRepository) : ViewModel() {
+@HiltViewModel
+class LauncherViewModel @Inject constructor(private val repository: AppRepository) : ViewModel() {
 
     private val _apps = MutableStateFlow<List<AppInfo>>(emptyList())
     val apps: StateFlow<List<AppInfo>> = _apps

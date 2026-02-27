@@ -2,7 +2,7 @@ package `in`.playhard.svastilauncher.data // Adjust to your actual package
 
 import android.content.Context
 import android.content.Intent
-import `in`.playhard.svastilauncher.data.local.AppDatabase
+import `in`.playhard.svastilauncher.data.local.HomeItemDao
 import `in`.playhard.svastilauncher.data.local.HomeItemEntity
 import `in`.playhard.svastilauncher.model.AppInfo
 import `in`.playhard.svastilauncher.model.HomeItem
@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class AppRepository(private val context: Context) {
+class AppRepository(
+    private val context: Context,
+    private val homeItemDao: HomeItemDao
+) {
     private val packageManager = context.packageManager
-
-    // Initialize the Room DAO
-    private val homeItemDao = AppDatabase.getDatabase(context).homeItemDao()
 
     fun getInstalledApps(): List<AppInfo> {
         val apps = mutableListOf<AppInfo>()
