@@ -190,8 +190,9 @@ class MainActivity : ComponentActivity() {
                                     drawerFraction.animateTo(if (target == LauncherScreen.DRAWER) 1f else 0f, tween(300))
                                 }
                             },
-                            // CRITICAL: Disable internal interaction while drawer is moving
-                            isInteractive = drawerFraction.value == 1f,
+                            // CRITICAL: Keep drawer interactive as long as the state is DRAWER
+                            // This prevents mid-gesture disruption while pulling down
+                            isInteractive = currentScreen == LauncherScreen.DRAWER,
                             modifier = Modifier.offset {
                                 IntOffset(0, ((1f - drawerFraction.value) * screenHeightPx).toInt())
                             }

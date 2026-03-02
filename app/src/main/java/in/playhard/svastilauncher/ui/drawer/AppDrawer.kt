@@ -35,20 +35,49 @@ fun AppDrawer(apps: List<AppInfo>,
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
+            private var isDraggingDrawer = false
+            private var hasScrolledList = false
+
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // If swiping down while at the top of the list, update fraction
-                if (available.y > 0 &&
-                    listState.firstVisibleItemIndex == 0 &&
-                    listState.firstVisibleItemScrollOffset == 0) {
-                    onFractionUpdate(available.y)
-                    return available // Consume the scroll so list doesn't move
+                if (source == NestedScrollSource.Drag) {
+                    val atTop = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+                    
+                    // Logic: We only allow the drawer to move if we are at the top AND we haven't scrolled the list yet in this gesture.
+                    // This prevents the drawer from starting to close if we hit the top WHILE scrolling.
+                    if (atTop && available.y > 0 && !hasScrolledList && !isDraggingDrawer) {
+                        isDraggingDrawer = true
+                    }
+                    
+                    if (isDraggingDrawer) {
+                        onFractionUpdate(available.y)
+                        return available // Consume the scroll so list doesn't move
+                    }
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                // If the list actually scrolled, mark it so we don't accidentally start dragging the drawer later in the same gesture
+                if (source == NestedScrollSource.Drag && consumed.y != 0f) {
+                    hasScrolledList = true
                 }
                 return Offset.Zero
             }
 
             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                // When finger is released, trigger momentum snapping
-                onDragStopped(-available.y)
+                // Only trigger momentum snapping if we were actually dragging the drawer
+                if (isDraggingDrawer) {
+                    onDragStopped(-available.y)
+                }
+                
+                // Reset flags for the next gesture
+                isDraggingDrawer = false
+                hasScrolledList = false
+                
                 return super.onPostFling(consumed, available)
             }
         }
@@ -66,8 +95,8 @@ fun AppDrawer(apps: List<AppInfo>,
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xCC0D0F18),
-                            Color(0xAA1A1B26)
+                            Color(0xFF0D0F18),
+                            Color(0xFF1A1B26)
                         )
                     )
                 )
