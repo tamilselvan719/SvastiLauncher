@@ -20,25 +20,36 @@ import androidx.compose.ui.unit.dp
 import `in`.playhard.svastilauncher.model.AppInfo
 import `in`.playhard.svastilauncher.ui.components.AppItem
 
+import androidx.compose.ui.unit.Velocity
+
 @Composable
 fun AppDrawer(apps: List<AppInfo>,
               onAppClick: (AppInfo) -> Unit,
               onAppLongClick: (AppInfo) -> Unit,
               onClose: () -> Unit,
+              onFractionUpdate: (Float) -> Unit,
+              onDragStopped: (Float) -> Unit,
+              isInteractive: Boolean = true,
               modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
 
-    // Use NestedScrollConnection to intercept "over-scroll" swipes
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // available.y > 0 means swiping DOWN
-                if (available.y > 50 &&
+                // If swiping down while at the top of the list, update fraction
+                if (available.y > 0 &&
                     listState.firstVisibleItemIndex == 0 &&
                     listState.firstVisibleItemScrollOffset == 0) {
-                    onClose()
+                    onFractionUpdate(available.y)
+                    return available // Consume the scroll so list doesn't move
                 }
-                return Offset.Zero // We don't "consume" the scroll, just listen
+                return Offset.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                // When finger is released, trigger momentum snapping
+                onDragStopped(-available.y)
+                return super.onPostFling(consumed, available)
             }
         }
     }
@@ -66,7 +77,8 @@ fun AppDrawer(apps: List<AppInfo>,
         // Layer 2: Foreground (App Items)
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = isInteractive // CRITICAL: Disable scroll while moving
         ) {
             items(apps) { app ->
                 AppItem(app = app,
